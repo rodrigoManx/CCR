@@ -1,5 +1,3 @@
- /* Client code in C */
- 
   #include <sys/types.h>
   #include <sys/socket.h>
   #include <netinet/in.h>
@@ -30,15 +28,13 @@
       perror("cannot create socket");
       exit(EXIT_FAILURE);
     }
- 
- 	
- 	
+
     memset(&stSockAddr, 0, sizeof(struct sockaddr_in));
- 
+
     stSockAddr.sin_family = AF_INET;
     stSockAddr.sin_port = htons(1100);
-    Res = inet_pton(AF_INET, "192.168.0.20", &stSockAddr.sin_addr);
- 
+    Res = inet_pton(AF_INET, "192.168.201.67", &stSockAddr.sin_addr);
+
     if (0 > Res)
     {
       perror("error: first parameter is not a valid address family");
@@ -51,7 +47,7 @@
       close(SocketFD);
       exit(EXIT_FAILURE);
     }
- 
+
     if (-1 == connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in)))
     {
       perror("connect failed");
@@ -73,7 +69,7 @@
       n = recv(SocketFD, buffer, 250, 0);
       if (n < 0) perror("ERROR reading from socket");
       printf("Server: %s\n", buffer);
-    } 
+    }
   }
 
   void chat()
