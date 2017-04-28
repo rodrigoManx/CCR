@@ -113,20 +113,28 @@ void setMarks() {
 }
 
 void validateQueque1() {
+	int count = 0;
 	for(int i = queque1.size() - 1; i >= 0; --i) {
 		queque1[i].condition = 1;
 		if(queque1[i].row > DIM - 1 || queque1[i].row < 0 || queque1[i].col > DIM - 1 || queque1[i].col < 0) {
+			++count;
+			queque1[i].condition = 0;
+		}
+		else if(board[queque1[i].row * DIM + queque1[i].col] != "-") {
+			++count;
 			queque1[i].condition = 0;
 		}
 		else{
 			for(int j = 0; j < i; ++j) {
 				if(queque1[i].row == queque1[j].row && queque1[i].col == queque1[j].col) {
+					++count;
 					queque1[i].condition = 0;
 					break;
 				}
 			}
 			for(int k = 0; k < queque2.size(); ++k) {
 				if(queque1[i].row == queque2[k].row && queque1[i].col == queque2[k].col) {
+					++count;
 					queque1[i].condition = 0;
 					break;
 				}
@@ -136,26 +144,29 @@ void validateQueque1() {
 	}
 	for (playerMove i : queque1)
 		queque2.push_back(i);
-}
-
-void validateQueque2() {
-	int count = 0;
-	for (int i = 0; i < queque2.size(); ++i) {
-		if (queque2[i].condition == 0) {
-			++count;
-			queque2.erase(queque2.begin() + i);
-		}
-	}
 	if(count == 0)
 		jugadaslistas = 1;
 	jugadasIncorrectas = count;
 	jugadasHechas = 0;
+	queque1.clear();
+}
 
+void validateQueque2() {
+	for (int i = 0; i < queque2.size(); ++i) {
+		if (queque2[i].condition == 0) {
+			queque2.erase(queque2.begin() + i);
+		}
+	}
 }
 
 //*****************************************************************************
 
 void fillQueque1(int ConnectFD, string ID, vector <string> parameters) {
+	cout << "player id " << ID << endl;
+	cout << parameters[0] << " " << parameters[1] << endl;
+
+	cout << queque1.size() << endl;
+
 	playerMove pm(stoi(parameters[0]), stoi(parameters[1]), ID);
     queque1.push_back(pm);
     ++jugadasHechas;
@@ -229,6 +240,19 @@ bool logIn(int ConnectFD, string clientName) {
 		string IDmessage = to_string(t);
 		packet IDPacket(IDmessage, login);
 		sendPacket(ConnectFD, IDPacket);
+
+		packet boardDim(to_string(DIM), mess);
+		sendPacket(ConnectFD, boardDim);
+
+		int j = 0;
+		if(t == 26) {
+			j = 6;
+		}
+		char a = t + j + 65;
+		string aux(1,a);
+		
+		packet playerMark(aux, mess);
+		sendPacket(ConnectFD, playerMark);
 		return true;
 	}
 	
@@ -360,6 +384,7 @@ int main(int argc, char const *argv[]) {
 			jugadasHechas = 0;
 			jugadasMandadas = 0;
 			jugadaslistas = 0;
+			cout << " jugadasMandadas " << jugadasMandadas << endl;
 		}
 	}
 	while(true);

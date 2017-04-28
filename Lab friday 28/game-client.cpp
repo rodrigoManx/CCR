@@ -1,13 +1,14 @@
 #include "packets.h"
-#define DIM 3
+int DIM = 0;
 int SocketFD;
 int SocketFD2;
 struct sockaddr_in server_addr1;
 struct sockaddr_in server_addr2;
 int ID;
 string name;
+string myMark;
 char buff[BUFFSIZE];
-string board[DIM * DIM];
+string *board;
 int state = 0;
 struct playerMove {
     int row;
@@ -72,7 +73,8 @@ bool gameOverM() {
     }
     return false;
 }
-void setBoard() {
+void setBoard(int DIM) {
+    board = new string[DIM*DIM];
     for (int i = 0; i < DIM * DIM; ++i) {
         board[i] = "-";
     }
@@ -176,7 +178,6 @@ bool revisarMiJugada() {
         state = 2;
     else if(message == "0")
         state = 0;
-    cout << "mi jugada " << message << endl;
     return true;
 }
 
@@ -185,7 +186,7 @@ bool askForMoves() {
     sendPacket(SocketFD, methodRequest);
     methodPacket *m;
     m = methodsPool("askForMoves");
-    cout << "check" << endl;
+
     sendPacket(SocketFD, *m);
     string message;
     int messageType;
@@ -258,11 +259,17 @@ bool logIn() {
     ID = stoi(message);
     cout << "registered!" << endl;
     cout << "your ID is: " << ID << endl;
+
+    recvPacket(SocketFD, messageType, message);
+    DIM = stoi(message);
+    setBoard(DIM);
+
+    recvPacket(SocketFD, messageType, myMark);
+    cout << "your mark is: " << myMark << endl;
     return true;
 }
 
 int main() {
-    setBoard();
     creatingSocket(SocketFD, 1100, server_addr1);
     logIn();
     close(SocketFD);
