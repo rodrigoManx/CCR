@@ -289,7 +289,7 @@ bool controller(int ConnectFD) {
 
 void creatingSocket(int &socketFD, int portNum, sockaddr_in &server_addr) {
 	socketFD = socket(AF_INET, SOCK_STREAM, 0);
-    if (SocketFD < 0) {
+    if (socketFD < 0) {
         cout << "\nError establishing socket..." << endl;
         exit(1);
     }
@@ -297,7 +297,7 @@ void creatingSocket(int &socketFD, int portNum, sockaddr_in &server_addr) {
 	server_addr.sin_addr.s_addr = htons(INADDR_ANY);
 	server_addr.sin_port = htons(portNum);
 
-    if ((bind(SocketFD, (struct sockaddr*)&server_addr,sizeof(server_addr))) < 0) {
+    if ((bind(socketFD, (struct sockaddr*)&server_addr,sizeof(server_addr))) < 0) {
 	    cout << "=> Error binding connection, the socket has already been established..." << endl;
 	    exit(1);
 	}
@@ -319,7 +319,7 @@ void *gameController2(void *connection) {
 int main(int argc, char const *argv[]) {
 	setBoard();
 	creatingSocket(SocketFD, 1100, server_addr1);
-	//creatingSocket(SocketFD2, 1101, server_addr2);
+	creatingSocket(SocketFD2, 1101, server_addr2);
 
 	prmt connection;
 	connection.SocketFD = SocketFD;
@@ -352,7 +352,7 @@ int main(int argc, char const *argv[]) {
 			llenarTablero();
 			displayBoard();
 		    if (gameOverM()) {
-		        exit(1);
+		        break;
 		    }
 			queque2.clear();
 			queque1.clear();
@@ -364,6 +364,12 @@ int main(int argc, char const *argv[]) {
 	}
 	while(true);
 
+	for (int i = 0; i < NPLAYERS; ++i)
+		pthread_create(&handlers[i], NULL, gameController2, (void *)&connection);
+
+	for (int i = 0; i < NPLAYERS; ++i)
+		pthread_join(handlers[i], NULL);
+	
 	close(SocketFD);
 	return 0;
 }

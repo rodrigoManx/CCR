@@ -2,7 +2,8 @@
 #define DIM 3
 int SocketFD;
 int SocketFD2;
-struct sockaddr_in server_addr;
+struct sockaddr_in server_addr1;
+struct sockaddr_in server_addr2;
 int ID;
 string name;
 char buff[BUFFSIZE];
@@ -95,12 +96,9 @@ void llenarTablero() {
 
 }
 //***************************************************
-void creatingSocket() {
-    int portNum = 1100; 
-    bool isExit = false;
-
-    SocketFD = socket(AF_INET, SOCK_STREAM, 0);
-    if (SocketFD < 0) {
+void creatingSocket(int &socketFD, int portNum, sockaddr_in &server_addr) {
+    socketFD = socket(AF_INET, SOCK_STREAM, 0);
+    if (socketFD < 0) {
         cout << "\nError establishing socket..." << endl;
         exit(1);
     }
@@ -110,29 +108,22 @@ void creatingSocket() {
     int Res = inet_pton(AF_INET, "192.168.0.20", &server_addr.sin_addr);
     if (0 > Res) {
         perror("error: first parameter is not a valid address family");
-        close(SocketFD);
+        close(socketFD);
         exit(1);
     }
 
     else if (0 == Res) {
         perror("char string (second parameter does not contain valid ipaddress");
-        close(SocketFD);
+        close(socketFD);
         exit(1);
     }
 
-    if (connect(SocketFD,(struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
+    if (connect(socketFD,(struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
         perror("connect failed");
-        close(SocketFD);
+        close(socketFD);
         exit(1);
     }
 }
-
-void splitString(string &a, string &b) {
-    int p = a.find(" ");
-    b = a.substr(0, p);
-    a = a.substr(p +1);
-}
-
 
 methodPacket *methodsPool(string methodName) {
     vector <string> parameters;
@@ -160,15 +151,6 @@ methodPacket *methodsPool(string methodName) {
     return NULL;
 }
 
-bool moveCondition() {
-    methodPacket *m;
-    m = methodsPool("moveCondition");
-    if(m == NULL) {
-        sendPacket(SocketFD, *m);
-    }
-    cout << "Unregistered method" << endl;
-    return false;
-}
 bool move() {
     packet methodRequest(name, method);
     sendPacket(SocketFD, methodRequest);
@@ -232,7 +214,7 @@ bool askForMoves() {
     llenarTablero();
     displayBoard();
     if (gameOverM()) {
-        exit(1);
+        state = 3;
     }
     queque.clear();
     return true;
@@ -281,12 +263,12 @@ bool logIn() {
 
 int main() {
     setBoard();
-    creatingSocket();
+    creatingSocket(SocketFD, 1100, server_addr1);
     logIn();
     close(SocketFD);
 
-    while(true) {
-        creatingSocket();
+    while(state < 3) {
+        creatingSocket(SocketFD, 1100, server_addr1);
         if (state == 0)
             move();
         else if(state == 1){
@@ -304,7 +286,7 @@ int main() {
         close(SocketFD);
     }
 
-    creatingSocket();
+    creatingSocket(SocketFD, 1100, server_addr1);
     logOut();
     close(SocketFD);
 
