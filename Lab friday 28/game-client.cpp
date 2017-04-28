@@ -73,6 +73,13 @@ bool gameOverM() {
     }
     return false;
 }
+bool empate() {
+    for (int i = 0; i < DIM * DIM; ++i){
+        if(board[i] == "-")
+            return false;
+    }
+    return true;
+}
 void setBoard(int DIM) {
     board = new string[DIM*DIM];
     for (int i = 0; i < DIM * DIM; ++i) {
@@ -142,8 +149,8 @@ methodPacket *methodsPool(string methodName) {
         m = new methodPacket(to_string(ID), "move", parameters);
         return m;
     }
-    else if(methodName == "revisarMiJugada") {
-        m = new methodPacket(to_string(ID), "revisarMiJugada", parameters);
+    else if(methodName == "checkMyMove") {
+        m = new methodPacket(to_string(ID), "checkMyMove", parameters);
         return m;
     }
     else if(methodName == "askForMoves") {
@@ -164,12 +171,12 @@ bool move() {
 
     return true;
 }
-bool revisarMiJugada() {
+bool checkMyMove() {
     packet methodRequest(name, method);
     sendPacket(SocketFD, methodRequest);
 
     methodPacket *m;
-    m = methodsPool("revisarMiJugada");
+    m = methodsPool("checkMyMove");
     sendPacket(SocketFD, *m);
     string message;
     int messageType;
@@ -216,6 +223,9 @@ bool askForMoves() {
     displayBoard();
     if (gameOverM()) {
         state = 3;
+    }
+    if (empate()) {
+        state = 3;   
     }
     queque.clear();
     return true;
@@ -266,6 +276,7 @@ bool logIn() {
 
     recvPacket(SocketFD, messageType, myMark);
     cout << "your mark is: " << myMark << endl;
+    cout << "------------------------" << endl;
     return true;
 }
 
@@ -279,7 +290,7 @@ int main() {
         if (state == 0)
             move();
         else if(state == 1){
-            revisarMiJugada();
+            checkMyMove();
         }
         else if(state == 2) {
             askForMoves();

@@ -1,7 +1,7 @@
 #include "structs.h"
 
 #define NPLAYERS 2
-#define DIM 3
+#define DIM 2
 int SocketFD;
 int SocketFD2;
 struct sockaddr_in server_addr1;
@@ -76,6 +76,13 @@ bool gameOverM() {
         }   
     }
     return false;
+}
+bool empate() {
+    for (int i = 0; i < DIM * DIM; ++i){
+        if(board[i] == "-")
+            return false;
+    }
+    return true;
 }
 void setBoard() {
     for (int i = 0; i < DIM * DIM; ++i) {
@@ -197,7 +204,7 @@ void askForMoves(int ConnectFD) {
 	++jugadasMandadas;
 }
 
-void revisarMiJugada(int ConnectFD, string ID, vector <string> parameters) {
+void checkMyMove(int ConnectFD, string ID, vector <string> parameters) {
 	for (playerMove i : queque2) {
 		if(i.ID == ID) {
 			string response = to_string(i.condition);
@@ -221,8 +228,8 @@ bool methodsPool(int ConnectFD, string &ID, string &methodName, vector <string> 
     	askForMoves(ConnectFD);
         return true;
     }
-    else if(methodName == "revisarMiJugada") {
-    	revisarMiJugada(ConnectFD, ID, parameters);
+    else if(methodName == "checkMyMove") {
+    	checkMyMove(ConnectFD, ID, parameters);
         return true;
     }
     return false;
@@ -375,7 +382,7 @@ int main(int argc, char const *argv[]) {
 		{
 			llenarTablero();
 			displayBoard();
-		    if (gameOverM()) {
+		    if (gameOverM() || empate()) {
 		        break;
 		    }
 			queque2.clear();
